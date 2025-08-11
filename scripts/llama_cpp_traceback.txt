@@ -1,0 +1,601 @@
+PS D:\PythonProject\LLM_Multi_Agent> pip uninstall -y llama-cpp-python
+Found existing installation: llama_cpp_python 0.3.4
+Uninstalling llama_cpp_python-0.3.4:
+  Successfully uninstalled llama_cpp_python-0.3.4
+PS D:\PythonProject\LLM_Multi_Agent> pip cache purge
+Files removed: 88 (651.5 MB)
+PS D:\PythonProject\LLM_Multi_Agent>
+PS D:\PythonProject\LLM_Multi_Agent> # Install from cu124 index
+PS D:\PythonProject\LLM_Multi_Agent> pip install --only-binary=:all: --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 llama-cpp-python==0.3.4
+Looking in indexes: https://pypi.org/simple, https://abetlen.github.io/llama-cpp-python/whl/cu124
+Collecting llama-cpp-python==0.3.4
+  Downloading https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.4-cu124/llama_cpp_python-0.3.4-cp311-cp311-win_amd64.whl (443.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 443.4/443.4 MB 23.7 MB/s  0:00:18
+Requirement already satisfied: typing-extensions>=4.5.0 in d:\pythonproject\llm_multi_agent\.venv\lib\site-packages (from llama-cpp-python==0.3.4) (4.14.1)
+Requirement already satisfied: numpy>=1.20.0 in d:\pythonproject\llm_multi_agent\.venv\lib\site-packages (from llama-cpp-python==0.3.4) (1.26.4)
+Requirement already satisfied: diskcache>=5.6.1 in d:\pythonproject\llm_multi_agent\.venv\lib\site-packages (from llama-cpp-python==0.3.4) (5.6.3)
+Requirement already satisfied: jinja2>=2.11.3 in d:\pythonproject\llm_multi_agent\.venv\lib\site-packages (from llama-cpp-python==0.3.4) (3.1.6)
+Requirement already satisfied: MarkupSafe>=2.0 in d:\pythonproject\llm_multi_agent\.venv\lib\site-packages (from jinja2>=2.11.3->llama-cpp-python==0.3.4) (3.0.2)
+Installing collected packages: llama-cpp-python
+Successfully installed llama-cpp-python-0.3.4
+PS D:\PythonProject\LLM_Multi_Agent> python
+Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import pathlib, llama_cpp, os
+>>> p = pathlib.Path(llama_cpp.__file__).parent
+>>> print("llama-cpp dir:", p)
+llama-cpp dir: D:\PythonProject\LLM_Multi_Agent\.venv\Lib\site-packages\llama_cpp
+>>> print("DLLs:", os.listdir(p))
+DLLs: ['lib', 'llama.py', 'llama_cache.py', 'llama_chat_format.py', 'llama_cpp.py', 'llama_grammar.py', 'llama_speculative.py', 'llama_tokenizer.py', 'llama_types.py', 'llava_cpp.py', 'py.typed', 'server', '_ctypes_extensions.py', '_ggml.py', '_internals.py', '_logger.py', '_utils.py', '__init__.py', '__pycache__']
+>>> print("CUDA dll present:", any("cuda" in d.lower() for d in os.listdir(p)))
+CUDA dll present: False
+>>> exit()
+PS D:\PythonProject\LLM_Multi_Agent> python
+Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> # run in Python REPL
+>>> import pathlib, llama_cpp, os
+>>> p = pathlib.Path(llama_cpp.__file__).parent / "lib"
+>>> print("dll dir:", p, "exists:", p.exists())
+dll dir: D:\PythonProject\LLM_Multi_Agent\.venv\Lib\site-packages\llama_cpp\lib exists: True
+>>> dlls = os.listdir(p) if p.exists() else []
+>>> print("DLLs:", dlls)
+DLLs: ['ggml-base.dll', 'ggml-base.lib', 'ggml-cpu.dll', 'ggml-cpu.lib', 'ggml-cuda.dll', 'ggml-cuda.lib', 'ggml.dll', 'ggml.lib', 'llama.dll', 'llama.lib', 'llava.dll', 'llava.lib']
+>>> print("CUDA dll present:", any("cuda" in d.lower() for d in dlls))
+CUDA dll present: True
+>>>
+>>>
+>>> exit()
+PS D:\PythonProject\LLM_Multi_Agent> python
+Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import os
+>>> from llama_cpp import Llama
+>>>
+>>> os.environ["LLAMA_LOG_LEVEL"] = "INFO"
+>>> model_path = r"D:\PythonProject\LLM_Multi_Agent\models\llama-3.1-8b-instruct-q4_k_m.gguf"
+>>>
+>>> llm = Llama(
+...     model_path=model_path,
+...     n_gpu_layers=1,   # must be >0 to trigger CUDA
+...     n_ctx=128,
+...     verbose=True
+... )
+ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    yes
+ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
+ggml_cuda_init: found 1 CUDA devices:
+  Device 0: NVIDIA GeForce RTX 4060, compute capability 8.9, VMM: yes
+llama_load_model_from_file: using device CUDA0 (NVIDIA GeForce RTX 4060) - 7097 MiB free
+llama_model_loader: loaded meta data with 37 key-value pairs and 292 tensors from D:\PythonProject\LLM_Multi_Agent\models\llama-3.1-8b-instruct-q4_k_m.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = llama
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = Llama 3.1 8B Instruct
+llama_model_loader: - kv   3:                           general.finetune str              = Instruct
+llama_model_loader: - kv   4:                           general.basename str              = Llama-3.1
+llama_model_loader: - kv   5:                         general.size_label str              = 8B
+llama_model_loader: - kv   6:                            general.license str              = llama3.1
+llama_model_loader: - kv   7:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   8:                  general.base_model.0.name str              = Meta Llama 3.1 8B
+llama_model_loader: - kv   9:          general.base_model.0.organization str              = Meta Llama
+llama_model_loader: - kv  10:              general.base_model.0.repo_url str              = https://huggingface.co/meta-llama/Met...
+llama_model_loader: - kv  11:                               general.tags arr[str,6]       = ["facebook", "meta", "pytorch", "llam...
+llama_model_loader: - kv  12:                          general.languages arr[str,8]       = ["en", "de", "fr", "it", "pt", "hi", ...
+llama_model_loader: - kv  13:                          llama.block_count u32              = 32
+llama_model_loader: - kv  14:                       llama.context_length u32              = 131072
+llama_model_loader: - kv  15:                     llama.embedding_length u32              = 4096
+llama_model_loader: - kv  16:                  llama.feed_forward_length u32              = 14336
+llama_model_loader: - kv  17:                 llama.attention.head_count u32              = 32
+llama_model_loader: - kv  18:              llama.attention.head_count_kv u32              = 8
+llama_model_loader: - kv  19:                       llama.rope.freq_base f32              = 500000.000000
+llama_model_loader: - kv  20:     llama.attention.layer_norm_rms_epsilon f32              = 0.000010
+llama_model_loader: - kv  21:                 llama.attention.key_length u32              = 128
+llama_model_loader: - kv  22:               llama.attention.value_length u32              = 128
+llama_model_loader: - kv  23:                           llama.vocab_size u32              = 128256
+llama_model_loader: - kv  24:                 llama.rope.dimension_count u32              = 128
+llama_model_loader: - kv  25:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  26:                         tokenizer.ggml.pre str              = llama-bpe
+llama_model_loader: - kv  27:                      tokenizer.ggml.tokens arr[str,128256]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  28:                  tokenizer.ggml.token_type arr[i32,128256]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  29:                      tokenizer.ggml.merges arr[str,280147]  = ["Ġ Ġ", "Ġ ĠĠĠ", "ĠĠ ĠĠ", "...
+llama_model_loader: - kv  30:                tokenizer.ggml.bos_token_id u32              = 128000
+llama_model_loader: - kv  31:                tokenizer.ggml.eos_token_id u32              = 128009
+llama_model_loader: - kv  32:               tokenizer.ggml.add_bos_token bool             = true
+llama_model_loader: - kv  33:               tokenizer.ggml.add_sep_token bool             = false
+llama_model_loader: - kv  34:                    tokenizer.chat_template str              = {{- bos_token }}\n{%- if custom_tools ...
+llama_model_loader: - kv  35:               general.quantization_version u32              = 2
+llama_model_loader: - kv  36:                          general.file_type u32              = 15
+llama_model_loader: - type  f32:   66 tensors
+llama_model_loader: - type q4_K:  193 tensors
+llama_model_loader: - type q6_K:   33 tensors
+llm_load_vocab: control token: 128098 '<|reserved_special_token_90|>' is not marked as EOG
+llm_load_vocab: control token: 128191 '<|reserved_special_token_183|>' is not marked as EOG
+llm_load_vocab: control token: 128130 '<|reserved_special_token_122|>' is not marked as EOG
+llm_load_vocab: control token: 128119 '<|reserved_special_token_111|>' is not marked as EOG
+llm_load_vocab: control token: 128136 '<|reserved_special_token_128|>' is not marked as EOG
+llm_load_vocab: control token: 128155 '<|reserved_special_token_147|>' is not marked as EOG
+llm_load_vocab: control token: 128196 '<|reserved_special_token_188|>' is not marked as EOG
+llm_load_vocab: control token: 128101 '<|reserved_special_token_93|>' is not marked as EOG
+llm_load_vocab: control token: 128138 '<|reserved_special_token_130|>' is not marked as EOG
+llm_load_vocab: control token: 128181 '<|reserved_special_token_173|>' is not marked as EOG
+llm_load_vocab: control token: 128034 '<|reserved_special_token_26|>' is not marked as EOG
+llm_load_vocab: control token: 128209 '<|reserved_special_token_201|>' is not marked as EOG
+llm_load_vocab: control token: 128031 '<|reserved_special_token_23|>' is not marked as EOG
+llm_load_vocab: control token: 128050 '<|reserved_special_token_42|>' is not marked as EOG
+llm_load_vocab: control token: 128244 '<|reserved_special_token_236|>' is not marked as EOG
+llm_load_vocab: control token: 128148 '<|reserved_special_token_140|>' is not marked as EOG
+llm_load_vocab: control token: 128198 '<|reserved_special_token_190|>' is not marked as EOG
+llm_load_vocab: control token: 128229 '<|reserved_special_token_221|>' is not marked as EOG
+llm_load_vocab: control token: 128165 '<|reserved_special_token_157|>' is not marked as EOG
+llm_load_vocab: control token: 128246 '<|reserved_special_token_238|>' is not marked as EOG
+llm_load_vocab: control token: 128017 '<|reserved_special_token_9|>' is not marked as EOG
+llm_load_vocab: control token: 128216 '<|reserved_special_token_208|>' is not marked as EOG
+llm_load_vocab: control token: 128161 '<|reserved_special_token_153|>' is not marked as EOG
+llm_load_vocab: control token: 128224 '<|reserved_special_token_216|>' is not marked as EOG
+llm_load_vocab: control token: 128082 '<|reserved_special_token_74|>' is not marked as EOG
+llm_load_vocab: control token: 128004 '<|finetune_right_pad_id|>' is not marked as EOG
+llm_load_vocab: control token: 128249 '<|reserved_special_token_241|>' is not marked as EOG
+llm_load_vocab: control token: 128107 '<|reserved_special_token_99|>' is not marked as EOG
+llm_load_vocab: control token: 128079 '<|reserved_special_token_71|>' is not marked as EOG
+llm_load_vocab: control token: 128225 '<|reserved_special_token_217|>' is not marked as EOG
+llm_load_vocab: control token: 128175 '<|reserved_special_token_167|>' is not marked as EOG
+llm_load_vocab: control token: 128223 '<|reserved_special_token_215|>' is not marked as EOG
+llm_load_vocab: control token: 128182 '<|reserved_special_token_174|>' is not marked as EOG
+llm_load_vocab: control token: 128068 '<|reserved_special_token_60|>' is not marked as EOG
+llm_load_vocab: control token: 128252 '<|reserved_special_token_244|>' is not marked as EOG
+llm_load_vocab: control token: 128178 '<|reserved_special_token_170|>' is not marked as EOG
+llm_load_vocab: control token: 128221 '<|reserved_special_token_213|>' is not marked as EOG
+llm_load_vocab: control token: 128052 '<|reserved_special_token_44|>' is not marked as EOG
+llm_load_vocab: control token: 128122 '<|reserved_special_token_114|>' is not marked as EOG
+llm_load_vocab: control token: 128151 '<|reserved_special_token_143|>' is not marked as EOG
+llm_load_vocab: control token: 128121 '<|reserved_special_token_113|>' is not marked as EOG
+llm_load_vocab: control token: 128158 '<|reserved_special_token_150|>' is not marked as EOG
+llm_load_vocab: control token: 128096 '<|reserved_special_token_88|>' is not marked as EOG
+llm_load_vocab: control token: 128090 '<|reserved_special_token_82|>' is not marked as EOG
+llm_load_vocab: control token: 128238 '<|reserved_special_token_230|>' is not marked as EOG
+llm_load_vocab: control token: 128139 '<|reserved_special_token_131|>' is not marked as EOG
+llm_load_vocab: control token: 128176 '<|reserved_special_token_168|>' is not marked as EOG
+llm_load_vocab: control token: 128077 '<|reserved_special_token_69|>' is not marked as EOG
+llm_load_vocab: control token: 128214 '<|reserved_special_token_206|>' is not marked as EOG
+llm_load_vocab: control token: 128171 '<|reserved_special_token_163|>' is not marked as EOG
+llm_load_vocab: control token: 128112 '<|reserved_special_token_104|>' is not marked as EOG
+llm_load_vocab: control token: 128180 '<|reserved_special_token_172|>' is not marked as EOG
+llm_load_vocab: control token: 128060 '<|reserved_special_token_52|>' is not marked as EOG
+llm_load_vocab: control token: 128000 '<|begin_of_text|>' is not marked as EOG
+llm_load_vocab: control token: 128152 '<|reserved_special_token_144|>' is not marked as EOG
+llm_load_vocab: control token: 128116 '<|reserved_special_token_108|>' is not marked as EOG
+llm_load_vocab: control token: 128072 '<|reserved_special_token_64|>' is not marked as EOG
+llm_load_vocab: control token: 128059 '<|reserved_special_token_51|>' is not marked as EOG
+llm_load_vocab: control token: 128094 '<|reserved_special_token_86|>' is not marked as EOG
+llm_load_vocab: control token: 128187 '<|reserved_special_token_179|>' is not marked as EOG
+llm_load_vocab: control token: 128103 '<|reserved_special_token_95|>' is not marked as EOG
+llm_load_vocab: control token: 128127 '<|reserved_special_token_119|>' is not marked as EOG
+llm_load_vocab: control token: 128023 '<|reserved_special_token_15|>' is not marked as EOG
+llm_load_vocab: control token: 128037 '<|reserved_special_token_29|>' is not marked as EOG
+llm_load_vocab: control token: 128228 '<|reserved_special_token_220|>' is not marked as EOG
+llm_load_vocab: control token: 128002 '<|reserved_special_token_0|>' is not marked as EOG
+llm_load_vocab: control token: 128006 '<|start_header_id|>' is not marked as EOG
+llm_load_vocab: control token: 128091 '<|reserved_special_token_83|>' is not marked as EOG
+llm_load_vocab: control token: 128044 '<|reserved_special_token_36|>' is not marked as EOG
+llm_load_vocab: control token: 128218 '<|reserved_special_token_210|>' is not marked as EOG
+llm_load_vocab: control token: 128211 '<|reserved_special_token_203|>' is not marked as EOG
+llm_load_vocab: control token: 128073 '<|reserved_special_token_65|>' is not marked as EOG
+llm_load_vocab: control token: 128168 '<|reserved_special_token_160|>' is not marked as EOG
+llm_load_vocab: control token: 128183 '<|reserved_special_token_175|>' is not marked as EOG
+llm_load_vocab: control token: 128234 '<|reserved_special_token_226|>' is not marked as EOG
+llm_load_vocab: control token: 128235 '<|reserved_special_token_227|>' is not marked as EOG
+llm_load_vocab: control token: 128067 '<|reserved_special_token_59|>' is not marked as EOG
+llm_load_vocab: control token: 128039 '<|reserved_special_token_31|>' is not marked as EOG
+llm_load_vocab: control token: 128106 '<|reserved_special_token_98|>' is not marked as EOG
+llm_load_vocab: control token: 128250 '<|reserved_special_token_242|>' is not marked as EOG
+llm_load_vocab: control token: 128173 '<|reserved_special_token_165|>' is not marked as EOG
+llm_load_vocab: control token: 128126 '<|reserved_special_token_118|>' is not marked as EOG
+llm_load_vocab: control token: 128047 '<|reserved_special_token_39|>' is not marked as EOG
+llm_load_vocab: control token: 128240 '<|reserved_special_token_232|>' is not marked as EOG
+llm_load_vocab: control token: 128045 '<|reserved_special_token_37|>' is not marked as EOG
+llm_load_vocab: control token: 128195 '<|reserved_special_token_187|>' is not marked as EOG
+llm_load_vocab: control token: 128078 '<|reserved_special_token_70|>' is not marked as EOG
+llm_load_vocab: control token: 128137 '<|reserved_special_token_129|>' is not marked as EOG
+llm_load_vocab: control token: 128186 '<|reserved_special_token_178|>' is not marked as EOG
+llm_load_vocab: control token: 128048 '<|reserved_special_token_40|>' is not marked as EOG
+llm_load_vocab: control token: 128076 '<|reserved_special_token_68|>' is not marked as EOG
+llm_load_vocab: control token: 128029 '<|reserved_special_token_21|>' is not marked as EOG
+llm_load_vocab: control token: 128013 '<|reserved_special_token_5|>' is not marked as EOG
+llm_load_vocab: control token: 128197 '<|reserved_special_token_189|>' is not marked as EOG
+llm_load_vocab: control token: 128056 '<|reserved_special_token_48|>' is not marked as EOG
+llm_load_vocab: control token: 128123 '<|reserved_special_token_115|>' is not marked as EOG
+llm_load_vocab: control token: 128095 '<|reserved_special_token_87|>' is not marked as EOG
+llm_load_vocab: control token: 128089 '<|reserved_special_token_81|>' is not marked as EOG
+llm_load_vocab: control token: 128057 '<|reserved_special_token_49|>' is not marked as EOG
+llm_load_vocab: control token: 128163 '<|reserved_special_token_155|>' is not marked as EOG
+llm_load_vocab: control token: 128011 '<|reserved_special_token_3|>' is not marked as EOG
+llm_load_vocab: control token: 128053 '<|reserved_special_token_45|>' is not marked as EOG
+llm_load_vocab: control token: 128160 '<|reserved_special_token_152|>' is not marked as EOG
+llm_load_vocab: control token: 128222 '<|reserved_special_token_214|>' is not marked as EOG
+llm_load_vocab: control token: 128035 '<|reserved_special_token_27|>' is not marked as EOG
+llm_load_vocab: control token: 128162 '<|reserved_special_token_154|>' is not marked as EOG
+llm_load_vocab: control token: 128205 '<|reserved_special_token_197|>' is not marked as EOG
+llm_load_vocab: control token: 128109 '<|reserved_special_token_101|>' is not marked as EOG
+llm_load_vocab: control token: 128185 '<|reserved_special_token_177|>' is not marked as EOG
+llm_load_vocab: control token: 128114 '<|reserved_special_token_106|>' is not marked as EOG
+llm_load_vocab: control token: 128159 '<|reserved_special_token_151|>' is not marked as EOG
+llm_load_vocab: control token: 128179 '<|reserved_special_token_171|>' is not marked as EOG
+llm_load_vocab: control token: 128115 '<|reserved_special_token_107|>' is not marked as EOG
+llm_load_vocab: control token: 128087 '<|reserved_special_token_79|>' is not marked as EOG
+llm_load_vocab: control token: 128113 '<|reserved_special_token_105|>' is not marked as EOG
+llm_load_vocab: control token: 128054 '<|reserved_special_token_46|>' is not marked as EOG
+llm_load_vocab: control token: 128030 '<|reserved_special_token_22|>' is not marked as EOG
+llm_load_vocab: control token: 128170 '<|reserved_special_token_162|>' is not marked as EOG
+llm_load_vocab: control token: 128012 '<|reserved_special_token_4|>' is not marked as EOG
+llm_load_vocab: control token: 128064 '<|reserved_special_token_56|>' is not marked as EOG
+llm_load_vocab: control token: 128118 '<|reserved_special_token_110|>' is not marked as EOG
+llm_load_vocab: control token: 128206 '<|reserved_special_token_198|>' is not marked as EOG
+llm_load_vocab: control token: 128099 '<|reserved_special_token_91|>' is not marked as EOG
+llm_load_vocab: control token: 128133 '<|reserved_special_token_125|>' is not marked as EOG
+llm_load_vocab: control token: 128190 '<|reserved_special_token_182|>' is not marked as EOG
+llm_load_vocab: control token: 128097 '<|reserved_special_token_89|>' is not marked as EOG
+llm_load_vocab: control token: 128086 '<|reserved_special_token_78|>' is not marked as EOG
+llm_load_vocab: control token: 128120 '<|reserved_special_token_112|>' is not marked as EOG
+llm_load_vocab: control token: 128193 '<|reserved_special_token_185|>' is not marked as EOG
+llm_load_vocab: control token: 128049 '<|reserved_special_token_41|>' is not marked as EOG
+llm_load_vocab: control token: 128242 '<|reserved_special_token_234|>' is not marked as EOG
+llm_load_vocab: control token: 128142 '<|reserved_special_token_134|>' is not marked as EOG
+llm_load_vocab: control token: 128188 '<|reserved_special_token_180|>' is not marked as EOG
+llm_load_vocab: control token: 128144 '<|reserved_special_token_136|>' is not marked as EOG
+llm_load_vocab: control token: 128247 '<|reserved_special_token_239|>' is not marked as EOG
+llm_load_vocab: control token: 128065 '<|reserved_special_token_57|>' is not marked as EOG
+llm_load_vocab: control token: 128117 '<|reserved_special_token_109|>' is not marked as EOG
+llm_load_vocab: control token: 128033 '<|reserved_special_token_25|>' is not marked as EOG
+llm_load_vocab: control token: 128184 '<|reserved_special_token_176|>' is not marked as EOG
+llm_load_vocab: control token: 128040 '<|reserved_special_token_32|>' is not marked as EOG
+llm_load_vocab: control token: 128204 '<|reserved_special_token_196|>' is not marked as EOG
+llm_load_vocab: control token: 128210 '<|reserved_special_token_202|>' is not marked as EOG
+llm_load_vocab: control token: 128245 '<|reserved_special_token_237|>' is not marked as EOG
+llm_load_vocab: control token: 128135 '<|reserved_special_token_127|>' is not marked as EOG
+llm_load_vocab: control token: 128071 '<|reserved_special_token_63|>' is not marked as EOG
+llm_load_vocab: control token: 128153 '<|reserved_special_token_145|>' is not marked as EOG
+llm_load_vocab: control token: 128194 '<|reserved_special_token_186|>' is not marked as EOG
+llm_load_vocab: control token: 128177 '<|reserved_special_token_169|>' is not marked as EOG
+llm_load_vocab: control token: 128236 '<|reserved_special_token_228|>' is not marked as EOG
+llm_load_vocab: control token: 128248 '<|reserved_special_token_240|>' is not marked as EOG
+llm_load_vocab: control token: 128241 '<|reserved_special_token_233|>' is not marked as EOG
+llm_load_vocab: control token: 128212 '<|reserved_special_token_204|>' is not marked as EOG
+llm_load_vocab: control token: 128207 '<|reserved_special_token_199|>' is not marked as EOG
+llm_load_vocab: control token: 128001 '<|end_of_text|>' is not marked as EOG
+llm_load_vocab: control token: 128003 '<|reserved_special_token_1|>' is not marked as EOG
+llm_load_vocab: control token: 128005 '<|reserved_special_token_2|>' is not marked as EOG
+llm_load_vocab: control token: 128007 '<|end_header_id|>' is not marked as EOG
+llm_load_vocab: control token: 128010 '<|python_tag|>' is not marked as EOG
+llm_load_vocab: control token: 128014 '<|reserved_special_token_6|>' is not marked as EOG
+llm_load_vocab: control token: 128015 '<|reserved_special_token_7|>' is not marked as EOG
+llm_load_vocab: control token: 128016 '<|reserved_special_token_8|>' is not marked as EOG
+llm_load_vocab: control token: 128018 '<|reserved_special_token_10|>' is not marked as EOG
+llm_load_vocab: control token: 128019 '<|reserved_special_token_11|>' is not marked as EOG
+llm_load_vocab: control token: 128020 '<|reserved_special_token_12|>' is not marked as EOG
+llm_load_vocab: control token: 128021 '<|reserved_special_token_13|>' is not marked as EOG
+llm_load_vocab: control token: 128022 '<|reserved_special_token_14|>' is not marked as EOG
+llm_load_vocab: control token: 128024 '<|reserved_special_token_16|>' is not marked as EOG
+llm_load_vocab: control token: 128025 '<|reserved_special_token_17|>' is not marked as EOG
+llm_load_vocab: control token: 128026 '<|reserved_special_token_18|>' is not marked as EOG
+llm_load_vocab: control token: 128027 '<|reserved_special_token_19|>' is not marked as EOG
+llm_load_vocab: control token: 128028 '<|reserved_special_token_20|>' is not marked as EOG
+llm_load_vocab: control token: 128032 '<|reserved_special_token_24|>' is not marked as EOG
+llm_load_vocab: control token: 128036 '<|reserved_special_token_28|>' is not marked as EOG
+llm_load_vocab: control token: 128038 '<|reserved_special_token_30|>' is not marked as EOG
+llm_load_vocab: control token: 128041 '<|reserved_special_token_33|>' is not marked as EOG
+llm_load_vocab: control token: 128042 '<|reserved_special_token_34|>' is not marked as EOG
+llm_load_vocab: control token: 128043 '<|reserved_special_token_35|>' is not marked as EOG
+llm_load_vocab: control token: 128046 '<|reserved_special_token_38|>' is not marked as EOG
+llm_load_vocab: control token: 128051 '<|reserved_special_token_43|>' is not marked as EOG
+llm_load_vocab: control token: 128055 '<|reserved_special_token_47|>' is not marked as EOG
+llm_load_vocab: control token: 128058 '<|reserved_special_token_50|>' is not marked as EOG
+llm_load_vocab: control token: 128061 '<|reserved_special_token_53|>' is not marked as EOG
+llm_load_vocab: control token: 128062 '<|reserved_special_token_54|>' is not marked as EOG
+llm_load_vocab: control token: 128063 '<|reserved_special_token_55|>' is not marked as EOG
+llm_load_vocab: control token: 128066 '<|reserved_special_token_58|>' is not marked as EOG
+llm_load_vocab: control token: 128069 '<|reserved_special_token_61|>' is not marked as EOG
+llm_load_vocab: control token: 128070 '<|reserved_special_token_62|>' is not marked as EOG
+llm_load_vocab: control token: 128074 '<|reserved_special_token_66|>' is not marked as EOG
+llm_load_vocab: control token: 128075 '<|reserved_special_token_67|>' is not marked as EOG
+llm_load_vocab: control token: 128080 '<|reserved_special_token_72|>' is not marked as EOG
+llm_load_vocab: control token: 128081 '<|reserved_special_token_73|>' is not marked as EOG
+llm_load_vocab: control token: 128083 '<|reserved_special_token_75|>' is not marked as EOG
+llm_load_vocab: control token: 128084 '<|reserved_special_token_76|>' is not marked as EOG
+llm_load_vocab: control token: 128085 '<|reserved_special_token_77|>' is not marked as EOG
+llm_load_vocab: control token: 128088 '<|reserved_special_token_80|>' is not marked as EOG
+llm_load_vocab: control token: 128092 '<|reserved_special_token_84|>' is not marked as EOG
+llm_load_vocab: control token: 128093 '<|reserved_special_token_85|>' is not marked as EOG
+llm_load_vocab: control token: 128100 '<|reserved_special_token_92|>' is not marked as EOG
+llm_load_vocab: control token: 128102 '<|reserved_special_token_94|>' is not marked as EOG
+llm_load_vocab: control token: 128104 '<|reserved_special_token_96|>' is not marked as EOG
+llm_load_vocab: control token: 128105 '<|reserved_special_token_97|>' is not marked as EOG
+llm_load_vocab: control token: 128108 '<|reserved_special_token_100|>' is not marked as EOG
+llm_load_vocab: control token: 128110 '<|reserved_special_token_102|>' is not marked as EOG
+llm_load_vocab: control token: 128111 '<|reserved_special_token_103|>' is not marked as EOG
+llm_load_vocab: control token: 128124 '<|reserved_special_token_116|>' is not marked as EOG
+llm_load_vocab: control token: 128125 '<|reserved_special_token_117|>' is not marked as EOG
+llm_load_vocab: control token: 128128 '<|reserved_special_token_120|>' is not marked as EOG
+llm_load_vocab: control token: 128129 '<|reserved_special_token_121|>' is not marked as EOG
+llm_load_vocab: control token: 128131 '<|reserved_special_token_123|>' is not marked as EOG
+llm_load_vocab: control token: 128132 '<|reserved_special_token_124|>' is not marked as EOG
+llm_load_vocab: control token: 128134 '<|reserved_special_token_126|>' is not marked as EOG
+llm_load_vocab: control token: 128140 '<|reserved_special_token_132|>' is not marked as EOG
+llm_load_vocab: control token: 128141 '<|reserved_special_token_133|>' is not marked as EOG
+llm_load_vocab: control token: 128143 '<|reserved_special_token_135|>' is not marked as EOG
+llm_load_vocab: control token: 128145 '<|reserved_special_token_137|>' is not marked as EOG
+llm_load_vocab: control token: 128146 '<|reserved_special_token_138|>' is not marked as EOG
+llm_load_vocab: control token: 128147 '<|reserved_special_token_139|>' is not marked as EOG
+llm_load_vocab: control token: 128149 '<|reserved_special_token_141|>' is not marked as EOG
+llm_load_vocab: control token: 128150 '<|reserved_special_token_142|>' is not marked as EOG
+llm_load_vocab: control token: 128154 '<|reserved_special_token_146|>' is not marked as EOG
+llm_load_vocab: control token: 128156 '<|reserved_special_token_148|>' is not marked as EOG
+llm_load_vocab: control token: 128157 '<|reserved_special_token_149|>' is not marked as EOG
+llm_load_vocab: control token: 128164 '<|reserved_special_token_156|>' is not marked as EOG
+llm_load_vocab: control token: 128166 '<|reserved_special_token_158|>' is not marked as EOG
+llm_load_vocab: control token: 128167 '<|reserved_special_token_159|>' is not marked as EOG
+llm_load_vocab: control token: 128169 '<|reserved_special_token_161|>' is not marked as EOG
+llm_load_vocab: control token: 128172 '<|reserved_special_token_164|>' is not marked as EOG
+llm_load_vocab: control token: 128174 '<|reserved_special_token_166|>' is not marked as EOG
+llm_load_vocab: control token: 128189 '<|reserved_special_token_181|>' is not marked as EOG
+llm_load_vocab: control token: 128192 '<|reserved_special_token_184|>' is not marked as EOG
+llm_load_vocab: control token: 128199 '<|reserved_special_token_191|>' is not marked as EOG
+llm_load_vocab: control token: 128200 '<|reserved_special_token_192|>' is not marked as EOG
+llm_load_vocab: control token: 128201 '<|reserved_special_token_193|>' is not marked as EOG
+llm_load_vocab: control token: 128202 '<|reserved_special_token_194|>' is not marked as EOG
+llm_load_vocab: control token: 128203 '<|reserved_special_token_195|>' is not marked as EOG
+llm_load_vocab: control token: 128208 '<|reserved_special_token_200|>' is not marked as EOG
+llm_load_vocab: control token: 128213 '<|reserved_special_token_205|>' is not marked as EOG
+llm_load_vocab: control token: 128215 '<|reserved_special_token_207|>' is not marked as EOG
+llm_load_vocab: control token: 128217 '<|reserved_special_token_209|>' is not marked as EOG
+llm_load_vocab: control token: 128219 '<|reserved_special_token_211|>' is not marked as EOG
+llm_load_vocab: control token: 128220 '<|reserved_special_token_212|>' is not marked as EOG
+llm_load_vocab: control token: 128226 '<|reserved_special_token_218|>' is not marked as EOG
+llm_load_vocab: control token: 128227 '<|reserved_special_token_219|>' is not marked as EOG
+llm_load_vocab: control token: 128230 '<|reserved_special_token_222|>' is not marked as EOG
+llm_load_vocab: control token: 128231 '<|reserved_special_token_223|>' is not marked as EOG
+llm_load_vocab: control token: 128232 '<|reserved_special_token_224|>' is not marked as EOG
+llm_load_vocab: control token: 128233 '<|reserved_special_token_225|>' is not marked as EOG
+llm_load_vocab: control token: 128237 '<|reserved_special_token_229|>' is not marked as EOG
+llm_load_vocab: control token: 128239 '<|reserved_special_token_231|>' is not marked as EOG
+llm_load_vocab: control token: 128243 '<|reserved_special_token_235|>' is not marked as EOG
+llm_load_vocab: control token: 128251 '<|reserved_special_token_243|>' is not marked as EOG
+llm_load_vocab: control token: 128253 '<|reserved_special_token_245|>' is not marked as EOG
+llm_load_vocab: control token: 128254 '<|reserved_special_token_246|>' is not marked as EOG
+llm_load_vocab: control token: 128255 '<|reserved_special_token_247|>' is not marked as EOG
+llm_load_vocab: special tokens cache size = 256
+llm_load_vocab: token to piece cache size = 0.7999 MB
+llm_load_print_meta: format           = GGUF V3 (latest)
+llm_load_print_meta: arch             = llama
+llm_load_print_meta: vocab type       = BPE
+llm_load_print_meta: n_vocab          = 128256
+llm_load_print_meta: n_merges         = 280147
+llm_load_print_meta: vocab_only       = 0
+llm_load_print_meta: n_ctx_train      = 131072
+llm_load_print_meta: n_embd           = 4096
+llm_load_print_meta: n_layer          = 32
+llm_load_print_meta: n_head           = 32
+llm_load_print_meta: n_head_kv        = 8
+llm_load_print_meta: n_rot            = 128
+llm_load_print_meta: n_swa            = 0
+llm_load_print_meta: n_embd_head_k    = 128
+llm_load_print_meta: n_embd_head_v    = 128
+llm_load_print_meta: n_gqa            = 4
+llm_load_print_meta: n_embd_k_gqa     = 1024
+llm_load_print_meta: n_embd_v_gqa     = 1024
+llm_load_print_meta: f_norm_eps       = 0.0e+00
+llm_load_print_meta: f_norm_rms_eps   = 1.0e-05
+llm_load_print_meta: f_clamp_kqv      = 0.0e+00
+llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+llm_load_print_meta: f_logit_scale    = 0.0e+00
+llm_load_print_meta: n_ff             = 14336
+llm_load_print_meta: n_expert         = 0
+llm_load_print_meta: n_expert_used    = 0
+llm_load_print_meta: causal attn      = 1
+llm_load_print_meta: pooling type     = 0
+llm_load_print_meta: rope type        = 0
+llm_load_print_meta: rope scaling     = linear
+llm_load_print_meta: freq_base_train  = 500000.0
+llm_load_print_meta: freq_scale_train = 1
+llm_load_print_meta: n_ctx_orig_yarn  = 131072
+llm_load_print_meta: rope_finetuned   = unknown
+llm_load_print_meta: ssm_d_conv       = 0
+llm_load_print_meta: ssm_d_inner      = 0
+llm_load_print_meta: ssm_d_state      = 0
+llm_load_print_meta: ssm_dt_rank      = 0
+llm_load_print_meta: ssm_dt_b_c_rms   = 0
+llm_load_print_meta: model type       = 8B
+llm_load_print_meta: model ftype      = Q4_K - Medium
+llm_load_print_meta: model params     = 8.03 B
+llm_load_print_meta: model size       = 4.58 GiB (4.89 BPW)
+llm_load_print_meta: general.name     = Llama 3.1 8B Instruct
+llm_load_print_meta: BOS token        = 128000 '<|begin_of_text|>'
+llm_load_print_meta: EOS token        = 128009 '<|eot_id|>'
+llm_load_print_meta: EOT token        = 128009 '<|eot_id|>'
+llm_load_print_meta: EOM token        = 128008 '<|eom_id|>'
+llm_load_print_meta: LF token         = 128 'Ä'
+llm_load_print_meta: EOG token        = 128008 '<|eom_id|>'
+llm_load_print_meta: EOG token        = 128009 '<|eot_id|>'
+llm_load_print_meta: max token length = 256
+llm_load_tensors: tensor 'token_embd.weight' (q4_K) (and 312 others) cannot be used with preferred buffer type CPU_AARCH64, using CPU instead
+llm_load_tensors: offloading 1 repeating layers to GPU
+llm_load_tensors: offloaded 1/33 layers to GPU
+llm_load_tensors:        CUDA0 model buffer size =   132.50 MiB
+llm_load_tensors:   CPU_Mapped model buffer size =  4552.80 MiB
+.......................................................................................
+llama_new_context_with_model: n_seq_max     = 1
+llama_new_context_with_model: n_ctx         = 128
+llama_new_context_with_model: n_ctx_per_seq = 128
+llama_new_context_with_model: n_batch       = 128
+llama_new_context_with_model: n_ubatch      = 128
+llama_new_context_with_model: flash_attn    = 0
+llama_new_context_with_model: freq_base     = 500000.0
+llama_new_context_with_model: freq_scale    = 1
+llama_new_context_with_model: n_ctx_per_seq (128) < n_ctx_train (131072) -- the full capacity of the model will not be utilized
+llama_kv_cache_init:      CUDA0 KV buffer size =     0.50 MiB
+llama_kv_cache_init:        CPU KV buffer size =    15.50 MiB
+llama_new_context_with_model: KV self size  =   16.00 MiB, K (f16):    8.00 MiB, V (f16):    8.00 MiB
+llama_new_context_with_model:        CPU  output buffer size =     0.49 MiB
+llama_new_context_with_model:      CUDA0 compute buffer size =   475.60 MiB
+llama_new_context_with_model:  CUDA_Host compute buffer size =     2.06 MiB
+llama_new_context_with_model: graph nodes  = 1030
+llama_new_context_with_model: graph splits = 346 (with bs=128), 3 (with bs=1)
+CUDA : ARCHS = 500,520,530,600,610,620,700,720,750,800,860,870,890,900 | FORCE_MMQ = 1 | USE_GRAPHS = 1 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | LLAMAFILE = 1 | OPENMP = 1 | AARCH64_REPACK = 1 |
+Model metadata: {'general.name': 'Llama 3.1 8B Instruct', 'general.architecture': 'llama', 'general.type': 'model', 'general.basename': 'Llama-3.1', 'general.fi
+netune': 'Instruct', 'general.size_label': '8B', 'general.license': 'llama3.1', 'general.base_model.count': '1', 'general.base_model.0.name': 'Meta Llama 3.1 8B
+', 'general.base_model.0.organization': 'Meta Llama', 'llama.attention.value_length': '128', 'general.base_model.0.repo_url': 'https://huggingface.co/meta-llama
+/Meta-Llama-3.1-8B', 'llama.block_count': '32', 'llama.context_length': '131072', 'llama.embedding_length': '4096', 'llama.feed_forward_length': '14336', 'llama
+.attention.head_count': '32', 'general.file_type': '15', 'tokenizer.ggml.eos_token_id': '128009', 'llama.attention.head_count_kv': '8', 'llama.rope.freq_base':
+'500000.000000', 'llama.attention.layer_norm_rms_epsilon': '0.000010', 'llama.attention.key_length': '128', 'llama.vocab_size': '128256', 'llama.rope.dimension_
+count': '128', 'tokenizer.ggml.model': 'gpt2', 'tokenizer.ggml.pre': 'llama-bpe', 'general.quantization_version': '2', 'tokenizer.ggml.bos_token_id': '128000',
+'tokenizer.ggml.add_bos_token': 'true', 'tokenizer.ggml.add_sep_token': 'false', 'tokenizer.chat_template': '{{- bos_token }}\n{%- if custom_tools is defined %}
+\n    {%- set tools = custom_tools %}\n{%- endif %}\n{%- if not tools_in_user_message is defined %}\n    {%- set tools_in_user_message = true %}\n{%- endif %}\n
+{%- if not date_string is defined %}\n    {%- set date_string = "26 Jul 2024" %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%-
+ endif %}\n\n{#- This block extracts the system message, so we can slot it into the right place. #}\n{%- if messages[0][\'role\'] == \'system\' %}\n    {%- set
+system_message = messages[0][\'content\']|trim %}\n    {%- set messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = "" %}\n{%- endif %}\n\n{#-
+System message + builtin tools #}\n{{- "<|start_header_id|>system<|end_header_id|>\\n\\n" }}\n{%- if builtin_tools is defined or tools is not none %}\n    {{- "
+Environment: ipython\\n" }}\n{%- endif %}\n{%- if builtin_tools is defined %}\n    {{- "Tools: " + builtin_tools | reject(\'equalto\', \'code_interpreter\') | j
+oin(", ") + "\\n\\n"}}\n{%- endif %}\n{{- "Cutting Knowledge Date: December 2023\\n" }}\n{{- "Today Date: " + date_string + "\\n\\n" }}\n{%- if tools is not non
+e and not tools_in_user_message %}\n    {{- "You have access to the following functions. To call a function, please respond with JSON for a function call." }}\n
+    {{- \'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.\' }}\n    {{- "Do not use variables.\\n\\n" }}
+\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- "\\n\\n" }}\n    {%- endfor %}\n{%- endif %}\n{{- system_message }}\n{{- "<|eot_id
+|>" }}\n\n{#- Custom tools are passed in a user message with some extra guidance #}\n{%- if tools_in_user_message and not tools is none %}\n    {#- Extract the
+first user message so we can plug it in here #}\n    {%- if messages | length != 0 %}\n        {%- set first_user_message = messages[0][\'content\']|trim %}\n
+      {%- set messages = messages[1:] %}\n    {%- else %}\n        {{- raise_exception("Cannot put tools in the first user message when there\'s no first user m
+essage!") }}\n{%- endif %}\n    {{- \'<|start_header_id|>user<|end_header_id|>\\n\\n\' -}}\n    {{- "Given the following functions, please respond with a JSON f
+or a function call " }}\n    {{- "with its proper arguments that best answers the given prompt.\\n\\n" }}\n    {{- \'Respond in the format {"name": function nam
+e, "parameters": dictionary of argument name and its value}.\' }}\n    {{- "Do not use variables.\\n\\n" }}\n    {%- for t in tools %}\n        {{- t | tojson(i
+ndent=4) }}\n        {{- "\\n\\n" }}\n    {%- endfor %}\n    {{- first_user_message + "<|eot_id|>"}}\n{%- endif %}\n\n{%- for message in messages %}\n    {%- if
+ not (message.role == \'ipython\' or message.role == \'tool\' or \'tool_calls\' in message) %}\n        {{- \'<|start_header_id|>\' + message[\'role\'] + \'<|en
+d_header_id|>\\n\\n\'+ message[\'content\'] | trim + \'<|eot_id|>\' }}\n    {%- elif \'tool_calls\' in message %}\n        {%- if not message.tool_calls|length
+== 1 %}\n            {{- raise_exception("This model only supports single tool-calls at once!") }}\n        {%- endif %}\n        {%- set tool_call = message.to
+ol_calls[0].function %}\n        {%- if builtin_tools is defined and tool_call.name in builtin_tools %}\n            {{- \'<|start_header_id|>assistant<|end_hea
+der_id|>\\n\\n\' -}}\n            {{- "<|python_tag|>" + tool_call.name + ".call(" }}\n            {%- for arg_name, arg_val in tool_call.arguments | items %}\n
+                {{- arg_name + \'="\' + arg_val + \'"\' }}\n                {%- if not loop.last %}\n                    {{- ", " }}\n                {%- endif
+%}\n                {%- endfor %}\n            {{- ")" }}\n        {%- else  %}\n            {{- \'<|start_header_id|>assistant<|end_header_id|>\\n\\n\' -}}\n            {{- \'{"name": "\' + tool_call.name + \'", \' }}\n            {{- \'"parameters": \' }}\n            {{- tool_call.arguments | tojson }}\n
+{{- "}" }}\n        {%- endif %}\n        {%- if builtin_tools is defined %}\n            {#- This means we\'re in ipython mode #}\n            {{- "<|eom_id|>"
+ }}\n        {%- else %}\n            {{- "<|eot_id|>" }}\n        {%- endif %}\n    {%- elif message.role == "tool" or message.role == "ipython" %}\n        {{
+- "<|start_header_id|>ipython<|end_header_id|>\\n\\n" }}\n        {%- if message.content is mapping or message.content is iterable %}\n            {{- message.c
+ontent | tojson }}\n        {%- else %}\n            {{- message.content }}\n        {%- endif %}\n        {{- "<|eot_id|>" }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- \'<|start_header_id|>assistant<|end_header_id|>\\n\\n\' }}\n{%- endif %}\n'}
+Available chat formats from metadata: chat_template.default
+Using gguf chat template: {{- bos_token }}
+{%- if custom_tools is defined %}
+    {%- set tools = custom_tools %}
+{%- endif %}
+{%- if not tools_in_user_message is defined %}
+    {%- set tools_in_user_message = true %}
+{%- endif %}
+{%- if not date_string is defined %}
+    {%- set date_string = "26 Jul 2024" %}
+{%- endif %}
+{%- if not tools is defined %}
+    {%- set tools = none %}
+{%- endif %}
+
+{#- This block extracts the system message, so we can slot it into the right place. #}
+{%- if messages[0]['role'] == 'system' %}
+    {%- set system_message = messages[0]['content']|trim %}
+    {%- set messages = messages[1:] %}
+{%- else %}
+    {%- set system_message = "" %}
+{%- endif %}
+
+{#- System message + builtin tools #}
+{{- "<|start_header_id|>system<|end_header_id|>\n\n" }}
+{%- if builtin_tools is defined or tools is not none %}
+    {{- "Environment: ipython\n" }}
+{%- endif %}
+{%- if builtin_tools is defined %}
+    {{- "Tools: " + builtin_tools | reject('equalto', 'code_interpreter') | join(", ") + "\n\n"}}
+{%- endif %}
+{{- "Cutting Knowledge Date: December 2023\n" }}
+{{- "Today Date: " + date_string + "\n\n" }}
+{%- if tools is not none and not tools_in_user_message %}
+    {{- "You have access to the following functions. To call a function, please respond with JSON for a function call." }}
+    {{- 'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.' }}
+    {{- "Do not use variables.\n\n" }}
+    {%- for t in tools %}
+        {{- t | tojson(indent=4) }}
+        {{- "\n\n" }}
+    {%- endfor %}
+{%- endif %}
+{{- system_message }}
+{{- "<|eot_id|>" }}
+
+{#- Custom tools are passed in a user message with some extra guidance #}
+{%- if tools_in_user_message and not tools is none %}
+    {#- Extract the first user message so we can plug it in here #}
+    {%- if messages | length != 0 %}
+        {%- set first_user_message = messages[0]['content']|trim %}
+        {%- set messages = messages[1:] %}
+    {%- else %}
+        {{- raise_exception("Cannot put tools in the first user message when there's no first user message!") }}
+{%- endif %}
+    {{- '<|start_header_id|>user<|end_header_id|>\n\n' -}}
+    {{- "Given the following functions, please respond with a JSON for a function call " }}
+    {{- "with its proper arguments that best answers the given prompt.\n\n" }}
+    {{- 'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.' }}
+    {{- "Do not use variables.\n\n" }}
+    {%- for t in tools %}
+        {{- t | tojson(indent=4) }}
+        {{- "\n\n" }}
+    {%- endfor %}
+    {{- first_user_message + "<|eot_id|>"}}
+{%- endif %}
+
+{%- for message in messages %}
+    {%- if not (message.role == 'ipython' or message.role == 'tool' or 'tool_calls' in message) %}
+        {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' }}
+    {%- elif 'tool_calls' in message %}
+        {%- if not message.tool_calls|length == 1 %}
+            {{- raise_exception("This model only supports single tool-calls at once!") }}
+        {%- endif %}
+        {%- set tool_call = message.tool_calls[0].function %}
+        {%- if builtin_tools is defined and tool_call.name in builtin_tools %}
+            {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' -}}
+            {{- "<|python_tag|>" + tool_call.name + ".call(" }}
+            {%- for arg_name, arg_val in tool_call.arguments | items %}
+                {{- arg_name + '="' + arg_val + '"' }}
+                {%- if not loop.last %}
+                    {{- ", " }}
+                {%- endif %}
+                {%- endfor %}
+            {{- ")" }}
+        {%- else  %}
+            {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' -}}
+            {{- '{"name": "' + tool_call.name + '", ' }}
+            {{- '"parameters": ' }}
+            {{- tool_call.arguments | tojson }}
+            {{- "}" }}
+        {%- endif %}
+        {%- if builtin_tools is defined %}
+            {#- This means we're in ipython mode #}
+            {{- "<|eom_id|>" }}
+        {%- else %}
+            {{- "<|eot_id|>" }}
+        {%- endif %}
+    {%- elif message.role == "tool" or message.role == "ipython" %}
+        {{- "<|start_header_id|>ipython<|end_header_id|>\n\n" }}
+        {%- if message.content is mapping or message.content is iterable %}
+            {{- message.content | tojson }}
+        {%- else %}
+            {{- message.content }}
+        {%- endif %}
+        {{- "<|eot_id|>" }}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' }}
+{%- endif %}
+
+Using chat eos_token: <|eot_id|>
+Using chat bos_token: <|begin_of_text|>
+>>>
+>>> resp = llm("Hello from CUDA check", max_tokens=12)
+llama_perf_context_print:        load time =    1000.65 ms
+llama_perf_context_print: prompt eval time =       0.00 ms /     5 tokens (    0.00 ms per token,      inf tokens per second)
+llama_perf_context_print:        eval time =       0.00 ms /    11 runs   (    0.00 ms per token,      inf tokens per second)
+llama_perf_context_print:       total time =    1793.35 ms /    16 tokens
+>>> print("Done.")
+Done.
+>>>
+>>>
