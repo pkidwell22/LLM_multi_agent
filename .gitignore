@@ -1,0 +1,45 @@
+﻿# Python / Windows
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Virtual envs
+.venv/
+venv/
+
+# Build & wheels
+dist/
+build/
+*.egg-info/
+*.whl
+
+# Data / indexes / cache
+rag_store/
+data/
+datasets/
+*.parquet
+*.faiss
+
+# Models & binaries
+models/
+*.gguf
+*.bin
+*.pt
+*.safetensors
+*.ckpt
+*.onnx
+*.dll
+*.lib
+*.exe
+
+# Notebooks
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
