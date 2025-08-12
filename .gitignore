@@ -6,6 +6,8 @@ __pycache__/
 *.pyo
 .pytest_cache/
 *.egg-info/
+
+# build / dist
 build/
 dist/
 
@@ -18,15 +20,20 @@ Thumbs.db
 # local config/secrets
 .env
 .env.*
+*.local.yaml
+*.local.yml
 
-# large artifacts (keep out of GitHub)
+# BIG artifacts — keep these out of GitHub
 models/
-rag_store/index/
-rag_store/embeddings/
-rag_store/chunks/chunks.parquet
-rag_store/raw/
-*.faiss
 *.gguf
+*.faiss
 *.parquet
 *.bin
 *.log
+rag_store/index/
+rag_store/embeddings/
+rag_store/raw/
+rag_store/chunks/chunks.parquet
+
+# local vendor tree (if you have a llama.cpp folder in the project)
+llama.cpp/
