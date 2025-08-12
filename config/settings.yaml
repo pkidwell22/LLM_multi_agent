@@ -1,45 +1,36 @@
-# === Project config (drop-in) ===
 data_root: ./rag_store
-
 embeddings:
-  # 768-dim encoder; fast + solid recall
   model: BAAI/bge-base-en-v1.5
   batch_size: 64
-  device: auto   # "cuda" or "cpu" or "auto"
-
+  device: auto
 faiss:
-  gutenberg:
+  gutenberg: &id001
     path: ./rag_store/embeddings/gutenberg
-    factory: IVF2048,PQ64   # large(ish) shard; trained with sampling
+    factory: IVF2048,PQ64
     dim: 768
   reading:
     path: ./rag_store/embeddings/reading
-    factory: Flat           # ~14k vecs → exact search is fine
+    factory: Flat
     dim: 768
-
+  books: *id001
 retrieval:
-  # initial recall before (optional) rerank
   top_k: 24
   per_shard:
     gutenberg: 16
     reading: 16
-
 reranker:
   enabled: true
   model: BAAI/bge-reranker-base
-  top_n: 8          # keep N passages after rerank
-
+  top_n: 8
 ocr:
   enabled: true
-
 llama_cpp:
-  model_path: ./models/llama-3.1-8b-instruct-q4_k_m.gguf
+  model_path: D:\PythonProject\LLM_Multi_Agent\models\Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
   n_ctx: 4096
   n_batch: 512
-  n_gpu_layers: 35     # ~max offload that fits 8 GB at 4k ctx for Q4_K_M
+  n_gpu_layers: 30
   temperature: 0.2
   top_p: 0.9
   verbose: false
-  
 citations:
   paragraphs: true

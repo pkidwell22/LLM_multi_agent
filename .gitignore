@@ -43,3 +43,23 @@ models/
 
 # VSCode
 .vscode/
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local data & models
+rag_store/**
+!rag_store/README.md
+models/**
+*.gguf
+
+# Logs
+*.log

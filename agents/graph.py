@@ -92,3 +92,60 @@ def init_services(cfg: dict) -> Dict[str, Any]:
     citer = CitationMapper(cfg["embeddings"]["model"])
     llm = load_llama_cpp(cfg)
     return {"cfg": cfg, "retriever": retriever, "reranker": reranker, "citer": citer, "llm": llm}
+
+# agents/graph.py (append)
+from typing import Dict, Any, Optional, List
+from .state import AgentState
+from . import planner as _planner
+from . import researcher as _researcher
+from . import critic as _critic
+from . import answerer as _answerer
+from rag.rerank import rerank as _rerank
+
+def build_multi_agent(services: Dict[str, Any], cfg: Any):
+    """Return a callable(query, **params) -> {answer, citations, trace}"""
+    retriever = services["retriever"]
+    llm = services["llm"]
+
+    def run(query: str,
+            shards: Optional[List[str]] = None,
+            top_k: int = 6,
+            per_shard_k: int = 50,
+            max_steps: int = 4,
+            trace: bool = False) -> Dict[str, Any]:
+
+        state = AgentState(
+            query=query,
+            shards=shards,
+            top_k=top_k,
+            per_shard_k=per_shard_k,
+            max_steps=max_steps,
+        )
+
+        _planner.plan(state)
+
+        for _ in range(state.max_steps):
+            state.step += 1
+            # research
+            _researcher.run(state, retriever=retriever, reranker_fn=_rerank)
+            # critic
+            if _critic.run(state):
+                break
+
+        # answer
+        result = _answerer.synthesize(state, llm=llm)
+        out = {**result}
+        if trace:
+            # serialize trace to plain dicts
+            out["trace"] = [
+                {
+                    "agent": t.agent,
+                    "thought": t.thought,
+                    "action": t.action,
+                    "observations": t.observations,
+                }
+                for t in state.trace
+            ]
+        return out
+
+    return run

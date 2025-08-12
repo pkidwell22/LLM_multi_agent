@@ -1,4 +1,9 @@
 # agents/llm.py
+import os, pathlib
+libdir = pathlib.Path(__file__).resolve().parents[1] / ".venv" / "Lib" / "site-packages" / "llama_cpp" / "lib"
+if libdir.exists():
+    os.add_dll_directory(str(libdir))
+
 from pathlib import Path
 from llama_cpp import Llama
 
