@@ -1,65 +1,32 @@
-﻿# Python / Windows
+﻿# venv / caches
+.venv/
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
 *.pyd
-*.log
-*.tmp
-*.bak
-.DS_Store
-Thumbs.db
-
-# Virtual envs
-.venv/
-venv/
-
-# Build & wheels
-dist/
-build/
+*.pyo
+.pytest_cache/
 *.egg-info/
-*.whl
+build/
+dist/
 
-# Data / indexes / cache
-rag_store/
-data/
-datasets/
-*.parquet
-*.faiss
-
-# Models & binaries
-models/
-*.gguf
-*.bin
-*.pt
-*.safetensors
-*.ckpt
-*.onnx
-*.dll
-*.lib
-*.exe
-
-# Notebooks
-.ipynb_checkpoints/
-
-# VSCode
-.vscode/
-# Python
-__pycache__/
-*.pyc
-.venv/
-.env
-
-# Editors/OS
+# editors/OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# Local data & models
-rag_store/**
-!rag_store/README.md
-models/**
-*.gguf
+# local config/secrets
+.env
+.env.*
 
-# Logs
+# large artifacts (keep out of GitHub)
+models/
+rag_store/index/
+rag_store/embeddings/
+rag_store/chunks/chunks.parquet
+rag_store/raw/
+*.faiss
+*.gguf
+*.parquet
+*.bin
 *.log

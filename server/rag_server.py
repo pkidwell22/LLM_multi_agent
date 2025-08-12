@@ -1,4 +1,5 @@
 # server/rag_server.py
+import server.bootstrap_llama  # <-- must be first, before any llama_cpp use
 from __future__ import annotations
 
 import os, sys, time, uuid, traceback, threading, inspect, re
@@ -47,11 +48,14 @@ def _looks_like_refusal(text: str) -> bool:
         return True
     return any(p in t for p in _REFUSAL_PATTERNS)
 
+# ---------- Models ----------
 class QueryIn(BaseModel):
     query: str
     top_k: Optional[int] = None
     per_shard_k: Optional[int] = None
     shards: Optional[List[str]] = None
+    target_role: Optional[str] = None   # NEW
+
 
 class AgentRunIn(BaseModel):
     query: str
@@ -62,6 +66,7 @@ class AgentRunIn(BaseModel):
     shards: Optional[List[str]] = None
     rerank: Optional[bool] = True
 
+
 class ChatIn(BaseModel):
     session_id: Optional[str] = None
     message: str
@@ -69,9 +74,12 @@ class ChatIn(BaseModel):
     per_shard_k: Optional[int] = None
     shards: Optional[List[str]] = None
     max_steps: int = 3
+    target_role: Optional[str] = None   # optional for chat too
+
 
 class ChatResetIn(BaseModel):
     session_id: str = Field(..., description="Session to clear")
+
 
 class AgentState(SimpleNamespace):
     def __init__(self, sid: str | None, **kwargs):
@@ -87,6 +95,7 @@ class AgentState(SimpleNamespace):
 
     def get_traces(self) -> List[Dict[str, Any]]:
         return list(self._traces)
+
 
 @app.on_event("startup")
 def _startup():
@@ -116,7 +125,9 @@ def _startup():
 
     print("[ok] pipeline ready")
 
+
 def _ensure_llm_ready():
+    # warm the default LLM (registry also exposes this as "llm")
     llm = (_services or {}).get("llm")
     if not llm:
         return
@@ -129,21 +140,25 @@ def _ensure_llm_ready():
         except Exception:
             pass
 
+
 def _session(session_id: str | None) -> str:
     sid = session_id or uuid.uuid4().hex
     with _MEM_LOCK:
         _MEM.setdefault(sid, {"messages": [], "traces": [], "meta": {"created_at": time.time()}})
     return sid
 
+
 def _mem_add(sid: str, role: str, content: str):
     with _MEM_LOCK:
         _MEM.setdefault(sid, {"messages": [], "traces": [], "meta": {"created_at": time.time()}})
         _MEM[sid]["messages"].append({"role": role, "content": content, "ts": time.time()})
 
+
 def _trace_add(sid: str, step: str, payload: Dict[str, Any]):
     with _MEM_LOCK:
         _MEM.setdefault(sid, {"messages": [], "traces": [], "meta": {"created_at": time.time()}})
         _MEM[sid]["traces"].append({"step": step, "time": time.time(), **payload})
+
 
 def _enrich_citation(c: Dict[str, Any]) -> Dict[str, Any]:
     chunk_id = c.get("chunk_id") or c.get("id") or c.get("chunkId")
@@ -161,9 +176,9 @@ def _enrich_citation(c: Dict[str, Any]) -> Dict[str, Any]:
         out["text"] = c["text"]
     return out
 
-# ---------- hydrate chunk text from disk using the span in chunk_id ----------
-_span_re = re.compile(r"^(.*?):(\d+)-(\d+)$")
 
+# ---------- chunk text hydration ----------
+_span_re = re.compile(r"^(.*?):(\d+)-(\d+)$")
 def _parse_span(chunk_id: str) -> tuple[int, int] | None:
     m = _span_re.match(chunk_id or "")
     if not m:
@@ -187,7 +202,6 @@ def _read_span_text(path: str, start: int, end: int) -> str:
         return ""
 
 def _hydrate_hits_text(hits: List[Dict[str, Any]]) -> None:
-    """Ensure each hit has a 'text' field by reading its span from the source file."""
     for h in hits:
         if not isinstance(h, dict):
             continue
@@ -220,87 +234,10 @@ def _hydrate_hits_text(hits: List[Dict[str, Any]]) -> None:
                 _CHUNK_TEXT_CACHE.clear()
             _CHUNK_TEXT_CACHE[cid] = txt
 
-def _keyword_terms(q: str) -> list[tuple[str, int]]:
-    """Return [(term_or_stem, weight), ...] for simple lexical scoring."""
-    ql = (q or "").lower()
-    terms = set()
-    for t in re.findall(r"[a-z]{3,}", ql):
-        terms.add(t)
-    boosters = {
-        "aristotle": 5, "aristotel": 5,
-        "poetics": 5, "poetic": 4,
-        "catharsis": 5, "katharsis": 5,
-        "tragedy": 3, "tragic": 3,
-        "pity": 2, "fear": 2,
-        "purification": 2, "purgation": 2,
-        "plato": 1, "republic": 1, "symposium": 1
-    }
-    out = []
-    for t, w in boosters.items():
-        if t in ql:
-            out.append((t, w))
-    for stem, w in [("aristotel", 5), ("poetic", 4), ("cathars", 5)]:
-        out.append((stem, w))
-    dedup = {}
-    for t, w in out:
-        dedup[t] = max(dedup.get(t, 0), w)
-    return sorted(dedup.items(), key=lambda x: -x[1])
 
-def _lexical_score(hit: dict, terms: list[tuple[str, int]]) -> float:
-    path = (hit.get("path") or "").lower()
-    text = (hit.get("text") or "").lower()
-    title = Path(path).stem.lower()
-    s = 0.0
-    for t, w in terms:
-        if not t:
-            continue
-        if t in path:  s += 1.5 * w
-        if t in title: s += 1.2 * w
-        if t in text:  s += 1.0 * w
-    if any(t for t, _ in terms if t.startswith("aristotel")):
-        if "plato" in (path + text): s -= 4.0
-        if "symposium" in (path + text): s -= 2.5
-        if "republic" in (path + text): s -= 2.0
-    return s
-
-def _lexical_rerank(query: str, hits: list[dict]) -> list[dict]:
-    terms = _keyword_terms(query)
-    scored = []
-    for h in hits:
-        sc = _lexical_score(h, terms)
-        v = h.get("score") or 0.0
-        scored.append((sc, float(v) if isinstance(v, (int, float)) else 0.0, h))
-    scored.sort(key=lambda t: (-(t[0]), -(t[1])))
-    return [h for _, __, h in scored]
-
-def _seed_by_filename(query: str, limit: int = 12) -> list[dict]:
-    """If retrieval misses, seed candidates where file path suggests relevance."""
-    ql = (query or "").lower()
-    wants_aristotle = ("aristotle" in ql) or ("aristotel" in ql) or ("poetic" in ql) or ("cathars" in ql)
-    if not wants_aristotle or not _CHUNK_LOOKUP:
-        return []
-    seeds = []
-    for cid, info in _CHUNK_LOOKUP.items():
-        p = (info.get("path") or "").lower()
-        if any(k in p for k in ("aristotle", "poetic")):
-            seeds.append({"chunk_id": cid, "path": info.get("path"), "shard": info.get("source")})
-            if len(seeds) >= limit:
-                break
-    _hydrate_hits_text(seeds)
-    return seeds
-
-def _dedup_hits(hits: list[dict]) -> list[dict]:
-    seen = set()
-    out = []
-    for h in hits:
-        cid = h.get("chunk_id") or h.get("id")
-        if cid and cid in seen:
-            continue
-        seen.add(cid)
-        out.append(h)
-    return out
-
+# ---------- helpers ----------
 def _call_llm(messages: List[Dict[str, str]], max_tokens: int = 256, temperature: float = 0.2) -> str:
+    # Agents path uses the default LLM
     llm = (_services or {}).get("llm")
     if not llm:
         return ""
@@ -321,12 +258,14 @@ def _call_llm(messages: List[Dict[str, str]], max_tokens: int = 256, temperature
         return str(llm(messages))
     return ""
 
+
 def _safe_import(module_name: str) -> Any | None:
     try:
         import importlib
         return importlib.import_module(module_name)
     except Exception:
         return None
+
 
 def _maybe_call(module: str, func_names: list[str], *, sid: Optional[str] = None, **kwargs) -> Any | None:
     mod = _safe_import(module)
@@ -388,6 +327,8 @@ def _maybe_call(module: str, func_names: list[str], *, sid: Optional[str] = None
 
     return None
 
+
+# ---------- routes ----------
 @app.get("/health")
 def health():
     ok_pipeline = _pipeline is not None
@@ -401,8 +342,10 @@ def health():
         "chunks_indexed": len(_CHUNK_LOOKUP),
     }
 
+
 @app.post("/query")
 def query(q: QueryIn):
+    # Pass through to the compiled graph; compose node will pick the LLM by role.
     state: Dict[str, Any] = {"query": q.query, "_services": _services}
     if q.top_k is not None:
         state["top_k"] = int(q.top_k)
@@ -410,6 +353,8 @@ def query(q: QueryIn):
         state["per_shard_k"] = int(q.per_shard_k)
     if q.shards:
         state["shards"] = list(q.shards)
+    if q.target_role:
+        state["target_role"] = q.target_role  # NEW
 
     try:
         out = _pipeline.invoke(state)
@@ -432,6 +377,8 @@ def query(q: QueryIn):
 
     return {"answer": answer, "sources": hits, "citations": raw}
 
+
+# -------- agent endpoints (unchanged, still use default LLM) --------
 def _agent_plan(query: str, shards: Optional[List[str]] = None, *, sid: Optional[str] = None) -> Dict[str, Any]:
     plan = _maybe_call(
         "agents.planner",
@@ -456,7 +403,6 @@ def _agent_research(
     *,
     sid: Optional[str] = None
 ) -> Dict[str, Any]:
-    # Try custom researcher first
     r = _maybe_call(
         "agents.researcher",
         ["research", "gather", "retrieve_loop"],
@@ -471,7 +417,6 @@ def _agent_research(
         r["hits"] = hits
         return r
 
-    # Fallback: call compiled pipeline once (and again with widened K if needed)
     def _once(tk, psk):
         s = {"query": query, "_services": _services}
         if tk is not None: s["top_k"] = int(tk)
@@ -491,22 +436,44 @@ def _agent_research(
             psk2 = (per_shard_k or 4) * 2
             hits, context = _once(tk2, psk2)
 
-        # If nothing obviously Aristotelian, seed by filename and dedup
-        if not any(("aristotl" in (h.get("text", "") + h.get("path", "")).lower() or
-                    "poetic"   in (h.get("text", "") + h.get("path", "")).lower())
-                   for h in hits):
-            seeds = _seed_by_filename(query, limit=16)
-            hits = _dedup_hits(hits + seeds)
+        def _keyword_terms(q: str) -> list[tuple[str, int]]:
+            ql = (q or "").lower()
+            terms = set()
+            for t in re.findall(r"[a-z]{3,}", ql):
+                terms.add(t)
+            boosters = {"aristotle": 5, "aristotel": 5, "poetics": 5, "poetic": 4, "catharsis": 5, "katharsis": 5}
+            out = []
+            for t, w in boosters.items():
+                if t in ql:
+                    out.append((t, w))
+            for stem, w in [("aristotel", 5), ("poetic", 4), ("cathars", 5)]:
+                out.append((stem, w))
+            dedup = {}
+            for t, w in out:
+                dedup[t] = max(dedup.get(t, 0), w)
+            return sorted(dedup.items(), key=lambda x: -x[1])
 
-        # Lightweight lexical rerank to push “aristotle/poetics/catharsis” upward
-        hits = _lexical_rerank(query, hits)
+        def _lexical_score(hit: dict, terms: list[tuple[str, int]]) -> float:
+            path = (hit.get("path") or "").lower()
+            text = (hit.get("text") or "").lower()
+            title = Path(path).stem.lower()
+            s = 0.0
+            for t, w in terms:
+                if not t:
+                    continue
+                if t in path:  s += 1.5 * w
+                if t in title: s += 1.2 * w
+                if t in text:  s += 1.0 * w
+            return s
+
+        terms = _keyword_terms(query)
+        hits = sorted(hits, key=lambda h: (_lexical_score(h, terms), float(h.get("score") or 0.0)), reverse=True)
         cap = max(12, (top_k or 8))
         hits = hits[:cap]
 
         ctx = "\n\n".join([h.get("text", "") for h in hits if h.get("text")])[:8000]
         return {"hits": hits, "context": ctx, "notes": "fallback: pipeline.retrieve + lexical boost"}
     except Exception as e:
-        # Never crash the agent—return an empty but well-formed result
         return {"hits": [], "context": "", "notes": f"retrieve error: {e}"}
 
 def _agent_critic(query: str, draft: str, hits: List[Dict[str, Any]], *, sid: Optional[str] = None) -> Dict[str, Any]:
